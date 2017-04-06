@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Row from './Row'
+import CharacterStats from './CharacterStats'
 
 class Map extends Component {
     constructor(props) {
@@ -11,7 +12,10 @@ class Map extends Component {
             numRooms: 20,
             roomDimensions: 8,
 			characterLocation: [],
-            enemies: [ ]
+            enemies: [],
+            weapons: [],
+            health: [],
+            characterStats: { hp: 100, weapon: { name: "blue", power: 20 } }
         }
     }
     generateBlankMap(){
@@ -177,7 +181,7 @@ class Map extends Component {
 			map[characterLocation[0]][characterLocation[1]-1] : undefined;
 		return neighbors;
 	}
-	moveCharacter(direction,factor,type) {
+	moveCharacter(direction, factor, type) {
 		const { gridHeight, map, gridWidth, characterLocation } = this.state;
 		var newMap = [];
 		map.map((row)=> newMap.push(row.slice()));
