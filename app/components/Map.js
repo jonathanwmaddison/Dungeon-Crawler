@@ -15,7 +15,7 @@ class Map extends Component {
             enemies: [],
             weapons: [],
             health: [],
-            characterStats: { hp: 100, weapon: { name: "blue", power: 20 } }
+            characterStats: { hp: 100, weaponName: "blue", power: 20 }
         }
     }
     generateBlankMap(){
@@ -217,7 +217,7 @@ class Map extends Component {
                 break;
             }
         }
-        var attackPower = Math.floor(Math.random()*20);
+        var attackPower = Math.floor(Math.random()*this.state.characterStats.power);
         enemies[enemyIndex].hp -= attackPower;
         if (enemies[enemyIndex].hp <=0) {
             var { map } = this.state;
@@ -233,6 +233,15 @@ class Map extends Component {
                 enemies: [...enemies]
             })
         }
+        this.enemyAttack()
+    }
+    enemyAttack(){
+        var { characterStats } = this.state;
+        var enemyAttackPower = Math.floor(Math.random()*20)
+        characterStats.hp -= enemyAttackPower
+        this.setState({
+            characterStats: characterStats 
+        })
     }
 	handleKeyPress (e) {
 		switch (e.key) {
@@ -262,9 +271,13 @@ class Map extends Component {
     }
     render() {
         return (
-        <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
-            { this.state.map.map((row, index)=> <Row height = { index } characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> ) }
-        </div>        
+        <div>
+            <CharacterStats stats={this.state.characterStats} />
+            <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
+
+                { this.state.map.map((row, index)=> <Row height = { index } characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> ) }
+            </div>        
+        </div>
         )
     }
 }
