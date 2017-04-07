@@ -17,7 +17,8 @@ class Map extends Component {
             enemies: [],
             weapons: [],
             health: [],
-            characterStats: { hp: 100, weaponName: "blue", power: [20, 0], experience: 0, level: 1 }
+            characterStats: { hp: 100, maxHp: 100, weaponName: "blue", power: [20, 0], experience: 0, level: 1 },
+            gameStatus: true
         }
     }
     generateBlankMap(){
@@ -76,7 +77,8 @@ class Map extends Component {
             var newExp = totalExperience - levels[characterStats.level - 1].experience;
             characterStats.level = newLevel;
             characterStats.power[0] = newLevelStats.power;
-            characterStats.maxHealth = newLevelStats.maxHealth;
+            characterStats.maxHp = newLevelStats.maxHealth;
+            characterStats.hp = characterStats.maxHp
             characterStats.experience = newExp;
         } else {
             characterStats.experience = totalExperience;
@@ -262,7 +264,9 @@ class Map extends Component {
                     amount = item.amount : null 
                 : null)
         var { characterStats } = this.state;
-        characterStats.hp = characterStats.hp + amount;
+        characterStats.hp + amount > characterStats.maxHp ? 
+            characterStats.hp = characterStats.maxHp : 
+            characterStats.hp = characterStats.hp + amount;
         this.setState({               
             characterStats: characterStats
          })
@@ -302,24 +306,33 @@ class Map extends Component {
         this.setState({
             characterStats: characterStats 
         })
+        if (characterStats.hp <= 0) {
+            this.setState({
+                gameStatus: false
+            })
+        } else {
+            
+        }
     }
 	handleKeyPress (e) {
-		switch (e.key) {
-			case "s":
-				this.moveCharacter("below",1,"row");
-				break;
-			case "w":
-				this.moveCharacter("above",-1,"row");
-				break;
-			case "a":
-				this.moveCharacter("left",-1,"column");
-				break;
-			case "d":
-				this.moveCharacter("right",1,"column");
-				break;
-			default:
-				console.log("unrecognized button press");
-		}
+        if(this.state.gameStatus){
+		    switch (e.key) {
+			    case "s":
+				    this.moveCharacter("below",1,"row");
+				    break;
+			    case "w":
+				    this.moveCharacter("above",-1,"row");
+				    break;
+			    case "a":
+				    this.moveCharacter("left",-1,"column");
+				    break;
+			    case "d":
+				    this.moveCharacter("right",1,"column");
+				    break;
+			    default:
+				    console.log("unrecognized button press");
+		    }
+        }
 	}
     trimMapForRendering() {
        const { map, characterLocation } = this.state;
@@ -334,6 +347,16 @@ class Map extends Component {
             newMap.push(cutRow)
        }
        return newMap;
+    }
+    onResetClick() {
+		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
+        this.setState({
+            map: map,
+			characterLocation: characterLocation,
+            enemies: enemies,
+            gameStatus: true,
+            characterStats: { hp: 100, maxHp: 100, weaponName: "blue", power: [20, 0], experience: 0, level: 1 }
+        })
     }
     componentWillMount(){
 		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
@@ -350,7 +373,7 @@ class Map extends Component {
             <CharacterStats stats={this.state.characterStats} key={uuid()} />
             <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
 
-                { renderMap.map((row, index)=> <Row height = { index } key = { uuid() }characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> : null ) }
+                { renderMap.map((row, index)=> <Row height = { index } gameStatus={ {status: this.state.gameStatus, onClick: ()=>this.onResetClick() } } key = { uuid() }characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> : null ) }
             </div>        
         </div>
         )
