@@ -17,7 +17,7 @@ class Map extends Component {
             enemies: [],
             weapons: [],
             health: [],
-            characterStats: { hp: 100, weaponName: "blue", power: 20 }
+            characterStats: { hp: 100, weaponName: "blue", power: [20, 0], experience: 0, level: 1 }
         }
     }
     generateBlankMap(){
@@ -58,6 +58,33 @@ class Map extends Component {
 	placeCharacter(map) {
 		return this.findOpenSpace(map)[0]	
 	}
+    handleExperience(experience){
+        var { characterStats } = this.state;
+        var totalExperience = characterStats.experience + experience;
+        const levels = [
+            {experience: 100, maxHealth: 120, power: 25},
+            {experience: 200, maxHealth: 150, power: 35},
+            {experience: 300, maxHealth: 210, power: 45},
+            {experience: 400, maxHealth: 260, power: 60},
+            {experience: 500, maxHealth: 310, power: 75},
+        ];
+        
+        if (totalExperience >= levels[characterStats.level -1].experience) {
+            //level up!
+            var newLevelStats = levels[characterStats.level-1];
+            var newLevel = characterStats.level + 1;
+            var newExp = totalExperience - levels[characterStats.level - 1].experience;
+            characterStats.level = newLevel;
+            characterStats.power[0] = newLevelStats.power;
+            characterStats.maxHealth = newLevelStats.maxHealth;
+            characterStats.experience = newExp;
+        } else {
+            characterStats.experience = totalExperience;
+        }
+        this.setState({
+            characterStats: characterStats
+        })
+    }
     pickRandomStart(){
         var [ heightStart, widthStart ] = [Math.floor(Math.random()*this.state.gridHeight),Math.floor(Math.random()*this.state.gridWidth)];
         return [heightStart, widthStart]
@@ -65,6 +92,7 @@ class Map extends Component {
     placeRandomEnemy(enemies, currentLocation) {
         if(Math.random() > .95) { 
             var enemy = { location: currentLocation, hp: Math.floor(Math.random()*100), type: "average", id: uuid() }
+            enemy.originalHp = enemy.hp
             enemies.push(enemy)
         }
         return enemies;
@@ -128,7 +156,7 @@ class Map extends Component {
     }
 
     addRandomRoomToMap(map){
-        const { gridHeight, gridWidth } = this.state;
+        const { gridHeight, gridWidth, health } = this.state;
         var [ heightStart, widthStart ] = this.pickRandomWallStart(map);
         var [ roomHeight, roomWidth ] = [
                 Math.floor(Math.random()*this.state.roomDimensions+2),
@@ -142,9 +170,21 @@ class Map extends Component {
             ];
         for (var i = heightStart; i < roomEndHeight; i++){
             for (var j = widthStart; j < roomEndWidth; j++) {
-                    map[i][j] = 0;
+                    if(Math.random() >.96) {
+                        var tile = 6; //health
+                        var healthItem = { location: [i,j], amount: Math.floor(Math.random()*50) }
+                        health.push(healthItem);
+                    } else if (Math.random()>.98) {
+                        tile = 7; //new weapon
+                    } else {
+                        tile = 0;
+                    }
+                map[i][j] = tile;
             }
         }
+        this.setState({
+            health: [...health]
+        })
         return { map: map, coordinates: [heightStart,widthStart] }
     }
 		
@@ -190,26 +230,43 @@ class Map extends Component {
 		const neighbors = this.returnCharNeighbors();
 		if(neighbors[direction] === 0) {
 			var newLocation = characterLocation.slice();
-			if(type === "row"){
-				newLocation[0]=newLocation[0]+factor;
-			} else if (type === "column") {
-				newLocation[1]=newLocation[1]+factor;
-			}
-		
+			type === "row" ? newLocation[0]=newLocation[0]+factor : newLocation[1]=newLocation[1]+factor
 			newMap[newLocation[0]][newLocation[1]] = 3;
 			newMap[characterLocation[0]][characterLocation[1]] = 0;
-			this.setState({
-				map: newMap,
-				characterLocation: newLocation
-			})
 		} else if (neighbors[direction] === 5) {
             var enemyLocation = characterLocation.slice();
             type === "row" ? enemyLocation[0] = enemyLocation[0]+factor: null;
             type === "column" ? enemyLocation[1] = enemyLocation[1]+factor : null;
             this.attackEnemy(enemyLocation)
+            return
+        } else if(neighbors[direction] ===6) {
+            var healthLocation = characterLocation.slice(); 
+			var newLocation = characterLocation.slice();
+            type === "row" ? healthLocation[0] = healthLocation[0]+factor : healthLocation[1] = healthLocation[1]+factor;
+			type === "row" ? newLocation[0]=newLocation[0]+factor : newLocation[1]=newLocation[1]+factor;
+            this.handleHealth(healthLocation);
+			newMap[healthLocation[0]][healthLocation[1]] = 3;
+			newMap[characterLocation[0]][characterLocation[1]] = 0;
+        } else {
+            return
         }
-		
+        this.setState({
+			map: newMap,
+			characterLocation: newLocation
+		})
 	}
+    handleHealth(healthLocation) {
+        var amount;
+        this.state.health.filter((item)=> item.location[0] === healthLocation[0] ? 
+                item.location[1]===healthLocation[1] ?
+                    amount = item.amount : null 
+                : null)
+        var { characterStats } = this.state;
+        characterStats.hp = characterStats.hp + amount;
+        this.setState({               
+            characterStats: characterStats
+         })
+    }
     attackEnemy(location) {
         var { enemies } = this.state;
         var enemyIndex;
@@ -219,13 +276,14 @@ class Map extends Component {
                 break;
             }
         }
-        var attackPower = Math.floor(Math.random()*this.state.characterStats.power);
+        var attackPower = Math.floor(Math.random()*this.state.characterStats.power[0]+this.state.characterStats.power[1]);
         enemies[enemyIndex].hp -= attackPower;
         if (enemies[enemyIndex].hp <=0) {
             var { map } = this.state;
             var enemyMapLoc = enemies[enemyIndex].location
             map[enemyMapLoc[0]][enemyMapLoc[1]] = 0
             enemies.splice(enemyIndex,1);
+            this.handleExperience(enemies[enemyIndex].originalHp)
             this.setState({
                 enemies: [...enemies],
                 map: map
@@ -265,7 +323,6 @@ class Map extends Component {
 	}
     trimMapForRendering() {
        const { map, characterLocation } = this.state;
-       console.log(map)
        var newMap = [];
        var rowTop = characterLocation[0] - 5 > 0 ? characterLocation[0] - 5 : 0;
        var rowBottom = characterLocation[0] + 5 < map[0].length ? characterLocation[0] + 5 : map[0].length; 

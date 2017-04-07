@@ -3,12 +3,10 @@ height: 100%;
 width: 100%;
 }
 #app {
-height: 100%;
-width: 200%;
+    width: 30%
 }
 #map {
  overflow:hidden;
- width: 100%;
  margin: auto;
  }
 .enemy {
@@ -38,6 +36,15 @@ width: 200%;
 .tile4{
     background-color: blue;
 	z-index: 9998;
+}
+.tile5 {
+    background-color: red;
+}
+.tile6 {
+    background-color: green;
+}
+.tile7 {
+    background-color: blue;
 }
 .visible {
 	
