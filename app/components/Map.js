@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import uuid from 'uuid'
+
 import Row from './Row'
 import CharacterStats from './CharacterStats'
 
@@ -62,7 +64,7 @@ class Map extends Component {
     }
     placeRandomEnemy(enemies, currentLocation) {
         if(Math.random() > .95) { 
-            var enemy = { location: currentLocation, hp: Math.floor(Math.random()*100), type: "average" }
+            var enemy = { location: currentLocation, hp: Math.floor(Math.random()*100), type: "average", id: uuid() }
             enemies.push(enemy)
         }
         return enemies;
@@ -261,6 +263,21 @@ class Map extends Component {
 				console.log("unrecognized button press");
 		}
 	}
+    trimMapForRendering() {
+       const { map, characterLocation } = this.state;
+       console.log(map)
+       var newMap = [];
+       var rowTop = characterLocation[0] - 5 > 0 ? characterLocation[0] - 5 : 0;
+       var rowBottom = characterLocation[0] + 5 < map[0].length ? characterLocation[0] + 5 : map[0].length; 
+       var rowRight = characterLocation[1] + 5 < map[0].length ? characterLocation[1] + 5 : map[0].length;
+       var rowLeft = characterLocation[1] - 5 > 0 ? characterLocation[1]-5 : 0;
+       for (var i = rowTop; i < rowBottom; i++) {
+            var currentRow = map[i].slice()
+            var cutRow = currentRow.slice(rowLeft, rowRight);
+            newMap.push(cutRow)
+       }
+       return newMap;
+    }
     componentWillMount(){
 		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
        	this.setState({ 
@@ -270,12 +287,13 @@ class Map extends Component {
        })
     }
     render() {
+        var renderMap = this.trimMapForRendering();
         return (
         <div>
-            <CharacterStats stats={this.state.characterStats} />
+            <CharacterStats stats={this.state.characterStats} key={uuid()} />
             <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
 
-                { this.state.map.map((row, index)=> <Row height = { index } characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> ) }
+                { renderMap.map((row, index)=> <Row height = { index } key = { uuid() }characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> : null ) }
             </div>        
         </div>
         )

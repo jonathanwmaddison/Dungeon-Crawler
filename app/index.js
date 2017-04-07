@@ -29,7 +29,7 @@ import Map from './components/Map'
 
 ReactDOM.render(
     <div>
-        <h1>Connected!</h1>
+        <h1>Pixel Labryinth</h1>
         <Map />
     </div>,
     document.getElementById('app')

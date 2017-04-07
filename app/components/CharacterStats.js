@@ -2,12 +2,10 @@ import React from 'react'
 
 function CharacterStats(props) {
     var { hp, weaponName, power } = props.stats;
-   console.log(props) 
     return (
         <div className="charDisplay">
-            {hp}
-            {weaponName}
-            {power}
+            <div className='charHp' ><h3> Health: {hp} </h3></div>
+            <div className="weaponInfo"><h4> Weapon: {weaponName} Attack Power: {power}</h4></div>
         </div>
 
     )
