@@ -2,24 +2,46 @@ body {
 height: 100%;
 width: 100%;
 }
+.container {
+    padding-top: 20px;
+    padding-left: 20px
+}
 #app {
-    width: 30%
+    width: 80%
 }
 #map {
  overflow:hidden;
  margin: auto;
+ border: none;
  }
 .enemy {
     background-color: orange!important;
+}
+.minimap {
+    width: 100px;
+    height: 100px;
+    padding: 10px;
 }
 .row div {
     display: inline;
     width: 40px;
     height: 40px;
     float: left;
+    border: none;
+}
+ .mini div {
+    display: inline;
+    width: 1.5px;
+    height: 1.5px;
+    float: left;
+}
+.mini {
+    z-index: 9998
 }
 .row {
     overflow:hidden;
+}
+.tileundefined: {
 }
 .tile1{
 	background-color: #142F40;
@@ -39,12 +61,15 @@ width: 100%;
 }
 .tile5 {
     background-color: red;
+	z-index: 9998;
 }
 .tile6 {
     background-color: green;
+	z-index: 9998;
 }
 .tile7 {
     background-color: blue;
+	z-index: 9998;
 }
 .visible {
 	

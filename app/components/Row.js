@@ -4,10 +4,10 @@ import Section from './section'
 import styles from '../styles/styles.css'
 
 function Row(props) {
-    const { row, height, enemies, characterLocation, gameStatus } = props;
+    const { row, height, enemies, characterLocation, gameStatus, type } = props;
     return (
      <div className="row">
-        {row.map((section, index)=> <Section gameStatus = { gameStatus } key = { uuid() }data= { props } identifier={section} enemies={enemies.filter((enemy)=>enemy[1]===index)} latitude={index} /> ) }
+        {row.map((section, index)=> <Section type = {type} gameStatus = { gameStatus } key = { uuid() }data= { props } identifier={section} enemies={enemies.filter((enemy)=>enemy[1]===index)} latitude={index} /> ) }
      </div>
     )
 }

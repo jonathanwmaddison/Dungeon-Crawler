@@ -7,17 +7,13 @@ function Section (props) {
         var button = <button onClick={gameStatus.onClick}>RIP Reset</button>
     }   else { button= "" }
 
-    var rowLength = 5;
-    //var distance = Math.pow(Math.pow(characterLocation[0]-height, 2) + Math.pow(characterLocation[1]-latitude, 2), .5)
-       var visibility = " visible" 
+   var distance = 4
    //Generate visibility around character
-    /*if(distance <= 4) {
+    if(distance <= 4) {
        var visibility = " visible" 
-    } else if (distance > 4 && distance < 8) {
+    } else if (distance > 4) {
         visibility = " semi-visible"
-    } else { 
-        visibility = " invisible" 
-    }*/
+    }
     return (
         <div className={"tile"+identifier}>
             <div className={visibility}> {button} </div>

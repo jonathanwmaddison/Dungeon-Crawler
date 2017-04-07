@@ -3,33 +3,43 @@ import uuid from 'uuid'
 
 import Row from './Row'
 import CharacterStats from './CharacterStats'
+import Minimap from './Minimap'
 
 class Map extends Component {
     constructor(props) {
         super(props)
         this.state = {
             map: [],
-            gridHeight: 50,
-            gridWidth: 50,
-            numRooms: 20,
-            roomDimensions: 8,
+            gridHeight: 60,
+            gridWidth: 60,
+            numRooms: 10,
+            roomDimensions: 10,
 			characterLocation: [],
             enemies: [],
             weapons: [],
             health: [],
             characterStats: { hp: 100, maxHp: 100, weaponName: "blue", power: [20, 0], experience: 0, level: 1 },
-            gameStatus: true
+            gameStatus: true,
+            minimap: []
         }
     }
     generateBlankMap(){
         var map = [];
+        var minimap = []
         for (var i=0; i<this.state.gridHeight; i++) {
             var row = [];
+            var minirow = []
             for(var j=0; j<this.state.gridWidth; j++){
                 row.push(1);
+                minirow.push(1)
             }
             map.push(row);
+            minimap.push(minirow)
         } 
+        this.setState({
+            minimap: minimap
+        })
+
         return map;
     }
     findWalls(map) {
@@ -99,8 +109,13 @@ class Map extends Component {
         }
         return enemies;
     }
-    placeBoss() {
-
+    placeBoss(map, enemies) {
+        var openSpace = this.findOpenSpace(map)
+        var bossLocation = openSpace[openSpace.length-1]
+		var boss = { location: bossLocation, hp: 1000, orginalHp: 1000, type: "boss", id: uuid() }
+        enemies.push(boss)
+        map[boss.location[0]][boss.location[1]] = 5;
+        return [ map, enemies ]
     }
     generateCorridor(roomCoordinateA, roomCoordinateB, map, enemies){
        let [ aRow, aColumn ] = roomCoordinateA;
@@ -256,6 +271,7 @@ class Map extends Component {
 			map: newMap,
 			characterLocation: newLocation
 		})
+        this.miniMapRender()
 	}
     handleHealth(healthLocation) {
         var amount;
@@ -334,13 +350,33 @@ class Map extends Component {
 		    }
         }
 	}
+    miniMapRender() {
+        const { map, characterLocation, minimap } = this.state;
+        var trimAmount = 5;
+        var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
+        var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length; 
+        var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
+        var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1]-trimAmount : 0;
+        var newMinimap = minimap.slice()
+
+        for(var i = rowTop; i < rowBottom; i++){
+            for(var j = rowLeft; j < rowRight; j++){
+                newMinimap[i][j] = map[i][j]
+            }
+        }
+        this.setState({
+            minimap: newMinimap
+        })
+    }
     trimMapForRendering() {
        const { map, characterLocation } = this.state;
        var newMap = [];
-       var rowTop = characterLocation[0] - 5 > 0 ? characterLocation[0] - 5 : 0;
-       var rowBottom = characterLocation[0] + 5 < map[0].length ? characterLocation[0] + 5 : map[0].length; 
-       var rowRight = characterLocation[1] + 5 < map[0].length ? characterLocation[1] + 5 : map[0].length;
-       var rowLeft = characterLocation[1] - 5 > 0 ? characterLocation[1]-5 : 0;
+       var trimAmount = 8;
+
+       var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
+       var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length; 
+       var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
+       var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1]-trimAmount : 0;
        for (var i = rowTop; i < rowBottom; i++) {
             var currentRow = map[i].slice()
             var cutRow = currentRow.slice(rowLeft, rowRight);
@@ -350,6 +386,7 @@ class Map extends Component {
     }
     onResetClick() {
 		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
+        [ map, enemies ] = this.placeBoss(map, enemies)
         this.setState({
             map: map,
 			characterLocation: characterLocation,
@@ -360,6 +397,7 @@ class Map extends Component {
     }
     componentWillMount(){
 		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
+        [ map, enemies ] = this.placeBoss(map, enemies)
        	this.setState({ 
             map: map,
 			characterLocation: characterLocation,
@@ -371,6 +409,7 @@ class Map extends Component {
         return (
         <div>
             <CharacterStats stats={this.state.characterStats} key={uuid()} />
+            <Minimap minimap={ this.state.minimap } />
             <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
 
                 { renderMap.map((row, index)=> <Row height = { index } gameStatus={ {status: this.state.gameStatus, onClick: ()=>this.onResetClick() } } key = { uuid() }characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> : null ) }

@@ -28,7 +28,7 @@ import Map from './components/Map'
 
 
 ReactDOM.render(
-    <div>
+    <div className="container">
         <h1>Pixel Labryinth</h1>
         <Map />
     </div>,
