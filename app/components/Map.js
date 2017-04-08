@@ -350,15 +350,32 @@ class Map extends Component {
 		    }
         }
 	}
+    getTrimCoordinates(trimAmount, characterLocation){
+       const { map } = this.state;
+       var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
+       var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length; 
+       // adjust if 0 or 
+       if(rowTop === 0) {
+          rowBottom += trimAmount*2-rowBottom;
+       } else if (rowBottom === map[0].length) {
+          rowTop -= characterLocation[0]+trimAmount - map[0].length;
+       }
+       var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
+       var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1]-trimAmount : 0;
+       
+       if(rowLeft === 0) {
+          rowRight += trimAmount*2-rowRight;
+       } else if (rowRight === map[0].length) {
+          rowLeft -= characterLocation[1]+trimAmount - map[0].length;
+       }
+       
+       return { rowRight: rowRight, rowBottom: rowBottom, rowTop: rowTop, rowLeft: rowLeft }
+    }
     miniMapRender() {
         const { map, characterLocation, minimap } = this.state;
         var trimAmount = 5;
-        var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
-        var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length; 
-        var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
-        var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1]-trimAmount : 0;
+        var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
         var newMinimap = minimap.slice()
-
         for(var i = rowTop; i < rowBottom; i++){
             for(var j = rowLeft; j < rowRight; j++){
                 newMinimap[i][j] = map[i][j]
@@ -368,15 +385,13 @@ class Map extends Component {
             minimap: newMinimap
         })
     }
+    
     trimMapForRendering() {
        const { map, characterLocation } = this.state;
        var newMap = [];
        var trimAmount = 8;
-
-       var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
-       var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length; 
-       var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
-       var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1]-trimAmount : 0;
+       var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
+       
        for (var i = rowTop; i < rowBottom; i++) {
             var currentRow = map[i].slice()
             var cutRow = currentRow.slice(rowLeft, rowRight);

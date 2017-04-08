@@ -9918,15 +9918,32 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
             }
         }
     }
+    getTrimCoordinates(trimAmount, characterLocation) {
+        const { map } = this.state;
+        var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
+        var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length;
+        // adjust if 0 or 
+        if (rowTop === 0) {
+            rowBottom += trimAmount * 2 - rowBottom;
+        } else if (rowBottom === map[0].length) {
+            rowTop -= characterLocation[0] + trimAmount - map[0].length;
+        }
+        var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
+        var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1] - trimAmount : 0;
+
+        if (rowLeft === 0) {
+            rowRight += trimAmount * 2 - rowRight;
+        } else if (rowRight === map[0].length) {
+            rowLeft -= characterLocation[1] + trimAmount - map[0].length;
+        }
+
+        return { rowRight: rowRight, rowBottom: rowBottom, rowTop: rowTop, rowLeft: rowLeft };
+    }
     miniMapRender() {
         const { map, characterLocation, minimap } = this.state;
         var trimAmount = 5;
-        var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
-        var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length;
-        var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
-        var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1] - trimAmount : 0;
+        var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
         var newMinimap = minimap.slice();
-
         for (var i = rowTop; i < rowBottom; i++) {
             for (var j = rowLeft; j < rowRight; j++) {
                 newMinimap[i][j] = map[i][j];
@@ -9936,15 +9953,13 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
             minimap: newMinimap
         });
     }
+
     trimMapForRendering() {
         const { map, characterLocation } = this.state;
         var newMap = [];
         var trimAmount = 8;
+        var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
 
-        var rowTop = characterLocation[0] - trimAmount > 0 ? characterLocation[0] - trimAmount : 0;
-        var rowBottom = characterLocation[0] + trimAmount < map[0].length ? characterLocation[0] + trimAmount : map[0].length;
-        var rowRight = characterLocation[1] + trimAmount < map[0].length ? characterLocation[1] + trimAmount : map[0].length;
-        var rowLeft = characterLocation[1] - trimAmount > 0 ? characterLocation[1] - trimAmount : 0;
         for (var i = rowTop; i < rowBottom; i++) {
             var currentRow = map[i].slice();
             var cutRow = currentRow.slice(rowLeft, rowRight);
@@ -10017,28 +10032,20 @@ function CharacterStats(props) {
         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             'div',
             { className: 'charHp' },
-            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                'h3',
-                null,
-                ' Health: ',
-                hp,
-                '  level: ',
-                level,
-                ' experience: ',
-                experience
-            )
+            ' Health: ',
+            hp,
+            '  level: ',
+            level,
+            ' experience: ',
+            experience
         ),
         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             'div',
             { className: 'weaponInfo' },
-            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                'h4',
-                null,
-                ' Weapon: ',
-                weaponName,
-                ' Attack Power: ',
-                power
-            )
+            ' Weapon: ',
+            weaponName,
+            ' Attack Power: ',
+            power
         )
     );
 }
@@ -10062,6 +10069,11 @@ function Minimap(props) {
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         'div',
         { className: 'minimap' },
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'h3',
+            null,
+            'Minimap'
+        ),
         minimap.map((row, height) => __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             'div',
             { className: 'row mini' },
@@ -10094,7 +10106,11 @@ function Section(props) {
     } else {
         button = "";
     }
-
+    if (identifier === 3) {
+        var character = "character";
+    } else {
+        character = "";
+    }
     var distance = 4;
     //Generate visibility around character
     if (distance <= 4) {
@@ -10104,7 +10120,7 @@ function Section(props) {
     }
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         "div",
-        { className: "tile" + identifier },
+        { className: "tile" + identifier + " " + character },
         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             "div",
             { className: visibility },
@@ -12105,7 +12121,7 @@ exports = module.exports = __webpack_require__(95)(undefined);
 
 
 // module
-exports.push([module.i, "body {\nheight: 100%;\nwidth: 100%;\n}\n.container {\n    padding-top: 20px;\n    padding-left: 20px\n}\n#app {\n    width: 80%\n}\n#map {\n overflow:hidden;\n margin: auto;\n border: none;\n }\n.enemy {\n    background-color: orange!important;\n}\n.minimap {\n    width: 100px;\n    height: 100px;\n    padding: 10px;\n}\n.row div {\n    display: inline;\n    width: 40px;\n    height: 40px;\n    float: left;\n    border: none;\n}\n .mini div {\n    display: inline;\n    width: 1.5px;\n    height: 1.5px;\n    float: left;\n}\n.mini {\n    z-index: 9998\n}\n.row {\n    overflow:hidden;\n}\n.tileundefined: {\n}\n.tile1{\n\tbackground-color: #142F40;\n\tz-index: 9998;\n}\n.tile0{\n    background-color: #77A4BF;\n\tz-index: 9998;\n}\n.tile3{\n    background-color: red;\n\tz-index: 9998;\n}\n.tile4{\n    background-color: blue;\n\tz-index: 9998;\n}\n.tile5 {\n    background-color: red;\n\tz-index: 9998;\n}\n.tile6 {\n    background-color: green;\n\tz-index: 9998;\n}\n.tile7 {\n    background-color: blue;\n\tz-index: 9998;\n}\n.visible {\n\t\n}\n.semi-visible {\n\tbackground-color: rgba(0,0,0,0.6) ;\n\tz-index: 9999;\n}\n.invisible {\n\tbackground-color: black;\n\tz-index: 9999;\n}\n", ""]);
+exports.push([module.i, "body {\nheight: 100%;\nwidth: 100%;\n}\n.container {\n    padding-top: 20px;\n    padding-left: 20px\n}\n#app {\n    width: 80%\n}\n#map {\n overflow:hidden;\n margin: auto;\n border: none;\n }\n.enemy {\n    background-color: orange!important;\n}\n.charDisplay{\n    display: inline;\n}\n.charDisplay div {\n    width: 100px;\n    text-align: center;\n    display: inline-block;\n}\n.minimap {\n    width: 100px;\n    height: 100px;\n    padding: 10px;\n    display: inline;\n}\n.row div {\n    display: inline;\n    width: 40px;\n    height: 40px;\n    float: left;\n    border: none;\n}\n .mini div {\n    display: inline-block;\n    width: 1.5px;\n    height: 1.5px;\n    float: left;\n}\n.mini {\n    z-index: 9998;\n    width: 101px;\n}\n.row {\n    overflow:hidden;\n}\n.tile1{\n\tbackground-color: #142F40;\n\tz-index: 9998;\n}\n.tile0{\n    background-color: #77A4BF;\n\tz-index: 9998;\n}\n.tile3{\n    background-color: white;\n\tz-index: 9998;\n}\n.tile4{\n    background-color: blue;\n\tz-index: 9998;\n}\n\n@keyframes leaves {\n    0% {\n        transform: scale(1.0);\n    }\n\t50% {\n\t\ttransform: scale(1.2)\n\t}\n    100% {\n        transform: scale(1.0);\n    }\n}\n.tile5 {\n    background-color: red;\n\tz-index: 9998;\n  \tanimation: leaves;\n\tanimation-duration: 1s;\n\tanimation-iteration-count:infinite;\n}\n.tile6 {\n    background-color: green;\n\tz-index: 9998;\n}\n.tile7 {\n    background-color: blue;\n\tz-index: 9998;\n}\n.visible {\n\t\n}\n.semi-visible {\n\tbackground-color: rgba(0,0,0,0.6) ;\n\tz-index: 9999;\n}\n.invisible {\n\tbackground-color: black;\n\tz-index: 9999;\n}\n", ""]);
 
 // exports
 
