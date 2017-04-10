@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 
 function Section (props) {
-    var { data, characterStats ,enemies, gameStatus, latitude, identifier } = props;
+    var { data, characterStats, enemies, gameStatus, latitude, identifier } = props;
     const { characterLocation, height } = data;
    
     if (identifier === 3 && !gameStatus.status) {
@@ -17,6 +17,7 @@ function Section (props) {
             percentHealthLeft = 1;
         } else {
             percentHealthLeft = enemies[0].hp/enemies[0].originalHp;
+            var attackPattern = enemies[0].attackPattern
         }
     }
     else {
@@ -26,7 +27,8 @@ function Section (props) {
         width: 40*percentHealthLeft,
         height: 40*percentHealthLeft,
         margin: (40-40*percentHealthLeft)/2,
-        fontSize: "10px"
+        fontSize: "10px",
+        
     }
     return (
         <div style={tileStyles}  id = {latitude + ", " + height} className={"tile"+identifier + " "}>

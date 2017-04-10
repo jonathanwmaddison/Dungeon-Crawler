@@ -6771,11 +6771,11 @@ module.exports = g;
 
 
 function Row(props) {
-    const { row, height, enemies, characterLocation, gameStatus, type } = props;
+    const { row, height, enemies, characterLocation, gameStatus, characterStats, type } = props;
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         'div',
         { className: 'row' },
-        row.map((section, index) => __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__section__["a" /* default */], { type: type, gameStatus: gameStatus, key: __WEBPACK_IMPORTED_MODULE_1_uuid___default()(), data: props, identifier: section, enemies: enemies.filter(enemy => enemy[1] === index), latitude: index }))
+        row.map((section, index) => __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__section__["a" /* default */], { type: type, gameStatus: gameStatus, key: __WEBPACK_IMPORTED_MODULE_1_uuid___default()(), characterStats: characterStats, data: props, identifier: section, enemies: enemies, latitude: index }))
     );
 }
 
@@ -9664,7 +9664,7 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
     }
     handleExperience(experience) {
         var { characterStats } = this.state;
-        var totalExperience = characterStats.experience + experience;
+        var totalExperience = Number(characterStats.experience) + Number(experience);
         const levels = [{ experience: 100, maxHealth: 120, power: 25 }, { experience: 200, maxHealth: 150, power: 35 }, { experience: 300, maxHealth: 210, power: 45 }, { experience: 400, maxHealth: 260, power: 60 }, { experience: 500, maxHealth: 310, power: 75 }];
 
         if (totalExperience >= levels[characterStats.level - 1].experience) {
@@ -9690,7 +9690,7 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
     }
     placeRandomEnemy(enemies, currentLocation) {
         if (Math.random() > .95) {
-            var enemy = { location: currentLocation, hp: Math.floor(Math.random() * 100), type: "average", id: __WEBPACK_IMPORTED_MODULE_1_uuid___default()() };
+            var enemy = { location: currentLocation, hp: Math.floor(Math.random() * 100), type: "average", id: __WEBPACK_IMPORTED_MODULE_1_uuid___default()(), attackPattern: [0, 1, 0, 0, 1] };
             enemy.originalHp = enemy.hp;
             enemies.push(enemy);
         }
@@ -9953,19 +9953,25 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
             minimap: newMinimap
         });
     }
-
-    trimMapForRendering() {
-        const { map, characterLocation } = this.state;
+    trimMapForRendering(map) {
+        const { characterLocation, enemies } = this.state;
         var newMap = [];
+        var currentEnemies = [];
         var trimAmount = 8;
         var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
-
+        currentEnemies = JSON.parse(JSON.stringify(enemies));
+        currentEnemies = currentEnemies.filter(enemy => enemy.location[0] >= rowTop && enemy.location[0] < rowBottom && enemy.location[1] >= rowLeft && enemy.location[1] < rowRight);
+        var correctCoordinates = [];
+        currentEnemies.forEach(function (enemy) {
+            enemy.location[0] = enemy.location[0] - rowTop; // rowTop is i 0 in rendered grid.
+            enemy.location[1] = enemy.location[1] - rowLeft;
+        });
         for (var i = rowTop; i < rowBottom; i++) {
             var currentRow = map[i].slice();
             var cutRow = currentRow.slice(rowLeft, rowRight);
             newMap.push(cutRow);
         }
-        return newMap;
+        return [newMap, currentEnemies];
     }
     onResetClick() {
         let [map, characterLocation, enemies] = this.randomMultiRoomPerRowMap();
@@ -9988,7 +9994,7 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
         });
     }
     render() {
-        var renderMap = this.trimMapForRendering();
+        var [renderMap, enemies] = this.trimMapForRendering(this.state.map);
         return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             'div',
             null,
@@ -9997,7 +10003,7 @@ class Map extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
             __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
                 'div',
                 { tabIndex: '0', onKeyPress: e => this.handleKeyPress(e), id: 'map' },
-                renderMap.map((row, index) => __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__Row__["a" /* default */], { height: index, gameStatus: { status: this.state.gameStatus, onClick: () => this.onResetClick() }, key: __WEBPACK_IMPORTED_MODULE_1_uuid___default()(), characterLocation: this.state.characterLocation, enemies: this.state.enemies.map(enemy => enemy.location).filter(enemy => enemy[0] === index), row: row }))
+                renderMap.map((row, index) => __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__Row__["a" /* default */], { height: index, gameStatus: { status: this.state.gameStatus, onClick: () => this.onResetClick() }, key: __WEBPACK_IMPORTED_MODULE_1_uuid___default()(), characterLocation: this.state.characterLocation, characterStats: this.state.characterStats, enemies: enemies, row: row }))
             )
         );
     }
@@ -10025,15 +10031,15 @@ module.exports = __webpack_require__(124);
 
 
 function CharacterStats(props) {
-    var { hp, weaponName, power, experience, level } = props.stats;
+    var { hp, weaponName, power, maxHp, experience, level } = props.stats;
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         'div',
         { className: 'charDisplay' },
         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             'div',
             { className: 'charHp' },
-            ' Health: ',
-            hp,
+            ' Max Health: ',
+            maxHp,
             '  level: ',
             level,
             ' experience: ',
@@ -10095,8 +10101,9 @@ function Minimap(props) {
 
 
 function Section(props) {
-    const { data, enemies, gameStatus, latitude, identifier } = props;
+    var { data, characterStats, enemies, gameStatus, latitude, identifier } = props;
     const { characterLocation, height } = data;
+
     if (identifier === 3 && !gameStatus.status) {
         var button = __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             "button",
@@ -10106,24 +10113,33 @@ function Section(props) {
     } else {
         button = "";
     }
+    var percentHealthLeft;
     if (identifier === 3) {
-        var character = "character";
+        var percentHealthLeft = characterStats.hp / characterStats.maxHp;
+    } else if (identifier === 5) {
+        enemies = enemies.filter(enemy => enemy.location[0] === height && enemy.location[1] === latitude);
+        if (enemies.length === 0) {
+            percentHealthLeft = 1;
+        } else {
+            percentHealthLeft = enemies[0].hp / enemies[0].originalHp;
+            var attackPattern = enemies[0].attackPattern;
+        }
     } else {
-        character = "";
+        percentHealthLeft = 1;
     }
-    var distance = 4;
-    //Generate visibility around character
-    if (distance <= 4) {
-        var visibility = " visible";
-    } else if (distance > 4) {
-        visibility = " semi-visible";
-    }
+    var tileStyles = {
+        width: 40 * percentHealthLeft,
+        height: 40 * percentHealthLeft,
+        margin: (40 - 40 * percentHealthLeft) / 2,
+        fontSize: "10px"
+
+    };
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         "div",
-        { className: "tile" + identifier + " " + character },
+        { style: tileStyles, id: latitude + ", " + height, className: "tile" + identifier + " " },
         __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
             "div",
-            { className: visibility },
+            null,
             " ",
             button,
             " "
@@ -12121,7 +12137,7 @@ exports = module.exports = __webpack_require__(95)(undefined);
 
 
 // module
-exports.push([module.i, "body {\nheight: 100%;\nwidth: 100%;\n}\n.container {\n    padding-top: 20px;\n    padding-left: 20px\n}\n#app {\n    width: 80%\n}\n#map {\n overflow:hidden;\n margin: auto;\n border: none;\n }\n.enemy {\n    background-color: orange!important;\n}\n.charDisplay{\n    display: inline;\n}\n.charDisplay div {\n    width: 100px;\n    text-align: center;\n    display: inline-block;\n}\n.minimap {\n    width: 100px;\n    height: 100px;\n    padding: 10px;\n    display: inline;\n}\n.row div {\n    display: inline;\n    width: 40px;\n    height: 40px;\n    float: left;\n    border: none;\n}\n .mini div {\n    display: inline-block;\n    width: 1.5px;\n    height: 1.5px;\n    float: left;\n}\n.mini {\n    z-index: 9998;\n    width: 101px;\n}\n.row {\n    overflow:hidden;\n}\n.tile1{\n\tbackground-color: #142F40;\n\tz-index: 9998;\n}\n.tile0{\n    background-color: #77A4BF;\n\tz-index: 9998;\n}\n.tile3{\n    background-color: white;\n\tz-index: 9998;\n}\n.tile4{\n    background-color: blue;\n\tz-index: 9998;\n}\n\n@keyframes leaves {\n    0% {\n        transform: scale(1.0);\n    }\n\t50% {\n\t\ttransform: scale(1.2)\n\t}\n    100% {\n        transform: scale(1.0);\n    }\n}\n.tile5 {\n    background-color: red;\n\tz-index: 9998;\n  \tanimation: leaves;\n\tanimation-duration: 1s;\n\tanimation-iteration-count:infinite;\n}\n.tile6 {\n    background-color: green;\n\tz-index: 9998;\n}\n.tile7 {\n    background-color: blue;\n\tz-index: 9998;\n}\n.visible {\n\t\n}\n.semi-visible {\n\tbackground-color: rgba(0,0,0,0.6) ;\n\tz-index: 9999;\n}\n.invisible {\n\tbackground-color: black;\n\tz-index: 9999;\n}\n", ""]);
+exports.push([module.i, "body {\nheight: 100%;\nwidth: 100%;\n}\n.container {\n    padding-top: 20px;\n    padding-left: 20px\n}\n#app {\n    width: 80%\n}\n#map {\n overflow:hidden;\n margin: auto;\n border: none;\ndisplay: inline-block;\n }\n.enemy {\n    background-color: orange!important;\n}\n.charDisplay{\n    display: inline;\n}\n.charDisplay div {\n    width: 100px;\n    text-align: center;\n    display: inline-block;\n}\n.minimap {\n    width: 100px;\n    height: 100px;\n    padding: 10px;\n    display: inline;\n}\n.row div {\n    display: inline;\n//    width: 40px;\n  //  height: 40px;\n    float: left;\n    border: none;\n}\n .mini div {\n    display: inline-block;\n    width: 1.5px;\n    height: 1.5px;\n    float: left;\n}\n.mini {\n    z-index: 9998;\n    width: 101px;\n}\n.row {\n    overflow:hidden;\n}\n.tile1{\n\tbackground-color: #142F40;\n\tz-index: 9998;\n}\n.tile0{\n    background-color: #77A4BF;\n\tz-index: 9998;\n}\n.tile3{\n    background-color: red;\n\tz-index: 9998;\n}\n.tile4{\n    background-color: blue;\n\tz-index: 9998;\n}\n\n@keyframes enemy-dance {\n    0% {\n        transform: scale(1.1);\n\t\t\n    }\n\t50% {\n\t\ttransform: scale(1.2)\n\t}\n    100% {\n        transform: scale(1.1);\n    }\n}\n.tile5 {\n    background-color: #cf9354;\n  \tanimation: enemy-dance;\n\tanimation-duration: 1s;\n\tanimation-iteration-count:infinite;\n\tborder-radius: 5%\n}\n.tile6 {\n    background-color: green;\n\tz-index: 9998;\n}\n.tile7 {\n    background-color: blue;\n\tz-index: 9998;\n}\n.visible {\n\t\n}\n.semi-visible {\n\tbackground-color: rgba(0,0,0,0.6) ;\n\tz-index: 9999;\n}\n.invisible {\n\tbackground-color: black;\n\tz-index: 9999;\n}\n", ""]);
 
 // exports
 

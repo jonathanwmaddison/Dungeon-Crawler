@@ -103,7 +103,7 @@ class Map extends Component {
     }
     placeRandomEnemy(enemies, currentLocation) {
         if(Math.random() > .95) { 
-            var enemy = { location: currentLocation, hp: Math.floor(Math.random()*100), type: "average", id: uuid() }
+            var enemy = { location: currentLocation, hp: Math.floor(Math.random()*100), type: "average", id: uuid(), attackPattern: [0,1,0,0,1] }
             enemy.originalHp = enemy.hp
             enemies.push(enemy)
         }
