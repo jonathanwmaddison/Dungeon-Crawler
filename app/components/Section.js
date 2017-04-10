@@ -1,25 +1,36 @@
 import React, { Component } from 'react'
 
 function Section (props) {
-    const { data, enemies, gameStatus, latitude, identifier } = props;
+    var { data, characterStats ,enemies, gameStatus, latitude, identifier } = props;
     const { characterLocation, height } = data;
+   
     if (identifier === 3 && !gameStatus.status) {
         var button = <button onClick={gameStatus.onClick}>RIP Reset</button>
-    }   else { button= "" }
+    } else { button= "" }
+   var percentHealthLeft; 
     if(identifier===3) {
-        var character = "character";
-    } else { character = ""
+        var  percentHealthLeft = characterStats.hp/characterStats.maxHp;
     }
-   var distance = 4
-   //Generate visibility around character
-    if(distance <= 4) {
-       var visibility = " visible" 
-    } else if (distance > 4) {
-        visibility = " semi-visible"
+    else if (identifier===5) {
+        enemies = enemies.filter((enemy)=> enemy.location[0]===height && enemy.location[1] ===latitude)
+        if (enemies.length===0) {
+            percentHealthLeft = 1;
+        } else {
+            percentHealthLeft = enemies[0].hp/enemies[0].originalHp;
+        }
+    }
+    else {
+        percentHealthLeft = 1
+    }
+    var tileStyles = {
+        width: 40*percentHealthLeft,
+        height: 40*percentHealthLeft,
+        margin: (40-40*percentHealthLeft)/2,
+        fontSize: "10px"
     }
     return (
-        <div className={"tile"+identifier + " "+character}>
-            <div className={visibility}> {button} </div>
+        <div style={tileStyles}  id = {latitude + ", " + height} className={"tile"+identifier + " "}>
+            <div> {button} </div>
         </div>
     )
 

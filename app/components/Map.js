@@ -71,7 +71,7 @@ class Map extends Component {
 	}
     handleExperience(experience){
         var { characterStats } = this.state;
-        var totalExperience = characterStats.experience + experience;
+        var totalExperience = Number(characterStats.experience) + Number(experience);
         const levels = [
             {experience: 100, maxHealth: 120, power: 25},
             {experience: 200, maxHealth: 150, power: 35},
@@ -385,19 +385,26 @@ class Map extends Component {
             minimap: newMinimap
         })
     }
-    
-    trimMapForRendering() {
-       const { map, characterLocation } = this.state;
+    trimMapForRendering(map) {
+       const {  characterLocation, enemies } = this.state;
        var newMap = [];
+       var currentEnemies=[];
        var trimAmount = 8;
        var { rowRight, rowBottom, rowTop, rowLeft } = this.getTrimCoordinates(trimAmount, characterLocation);
-       
+       currentEnemies = JSON.parse(JSON.stringify(enemies))
+       currentEnemies = currentEnemies.filter((enemy)=>enemy.location[0]>=rowTop && enemy.location[0] < rowBottom && enemy.location[1] >= rowLeft && enemy.location[1] < rowRight)
+       var correctCoordinates = []
+       currentEnemies.forEach(function(enemy){
+         enemy.location[0] =  enemy.location[0]-rowTop; // rowTop is i 0 in rendered grid.
+         enemy.location[1] = enemy.location[1]-rowLeft;
+         }
+       ) 
        for (var i = rowTop; i < rowBottom; i++) {
             var currentRow = map[i].slice()
             var cutRow = currentRow.slice(rowLeft, rowRight);
             newMap.push(cutRow)
        }
-       return newMap;
+       return [ newMap, currentEnemies ];
     }
     onResetClick() {
 		let [ map, characterLocation, enemies ] = this.randomMultiRoomPerRowMap();
@@ -420,14 +427,14 @@ class Map extends Component {
        })
     }
     render() {
-        var renderMap = this.trimMapForRendering();
+        var [ renderMap, enemies ] = this.trimMapForRendering(this.state.map);
         return (
         <div>
             <CharacterStats stats={this.state.characterStats} key={uuid()} />
-            <Minimap minimap={ this.state.minimap } />
+            <Minimap minimap={ this.state.minimap } />  
             <div tabIndex="0" onKeyPress={(e)=>this.handleKeyPress(e)} id="map">
 
-                { renderMap.map((row, index)=> <Row height = { index } gameStatus={ {status: this.state.gameStatus, onClick: ()=>this.onResetClick() } } key = { uuid() }characterLocation = { this.state.characterLocation } enemies = { this.state.enemies.map((enemy)=> enemy.location).filter((enemy)=>enemy[0]===index) } row={ row } /> : null ) }
+                { renderMap.map((row, index)=> <Row height = { index } gameStatus={ {status: this.state.gameStatus, onClick: ()=>this.onResetClick() } } key = { uuid() }characterLocation = { this.state.characterLocation } characterStats = { this.state.characterStats } enemies = { enemies } row={ row } /> : null ) }
             </div>        
         </div>
         )
